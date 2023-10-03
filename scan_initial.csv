@@ -1,0 +1,6 @@
+static_wen, 1, 1, 0, 0 
+static_ren, 1, 1, 0, 0 
+static_addr, 1, 18, 0, 0 
+static_wdata, 1, 256, 0, 0 
+static_rdata, 1, 256, 0, 0 
+static_ready, 1, 1, 0, 0 

@@ -66,7 +66,7 @@ freq =5e6
 
 
 global packet_length
-global scan_id_reg
+# global scan_id_reg
 
 scan_id_reg = 0
 packet_length = 533
@@ -78,18 +78,18 @@ def command_write_scanbit(din, vv=0):
     if vv: print ("- command compile, write_do to scan = [%d]"%(din))
     commands = []
     i_din = int(din)
-    commands.append(0*SCHAIN+0*SCHIP+i_din*SDI)
-    commands.append(0*SCHAIN+0*SCHIP+i_din*SDI+1*PHI)
-    commands.append(0*SCHAIN+0*SCHIP+i_din*SDI+0*PHI)
-    commands.append(0*SCHAIN+0*SCHIP+i_din*SDI+1*PHI_B)
-    commands.append(0*SCHAIN+0*SCHIP+i_din*SDI+0*PHI_B)
+    commands.append(0*SCHAIN+0*SCHIP+i_din*SDI+1*CLK_GATE+scan_id_reg*SCAN_ID)
+    commands.append(0*SCHAIN+0*SCHIP+i_din*SDI+1*PHI+1*CLK_GATE+scan_id_reg*SCAN_ID)
+    commands.append(0*SCHAIN+0*SCHIP+i_din*SDI+0*PHI+1*CLK_GATE+scan_id_reg*SCAN_ID)
+    commands.append(0*SCHAIN+0*SCHIP+i_din*SDI+1*PHI_B+1*CLK_GATE+scan_id_reg*SCAN_ID)
+    commands.append(0*SCHAIN+0*SCHIP+i_din*SDI+0*PHI_B+1*CLK_GATE+scan_id_reg*SCAN_ID)
     
     return commands
 
 def command_read_scanbit(ftdi,peek=True, vv=0): #scan out from chip
     if vv: print("- command compile, read_scanbit")
     commands = []
-    commands.append(0*SCHAIN+0*PHI)
+    commands.append(0*SCHAIN+0*PHI+1*CLK_GATE+scan_id_reg*SCAN_ID)
     ftdi.write(commands)
     if peek:
         data= ftdi.read(1, peek)
@@ -99,10 +99,10 @@ def command_read_scanbit(ftdi,peek=True, vv=0): #scan out from chip
         dout = format(int(data),'#010b')[-6] # D5 is dout
 
     commands = []
-    commands.append(0*SCHAIN+1*PHI)
-    commands.append(0*SCHAIN+0*PHI)
-    commands.append(0*SCHAIN+1*PHI_B)
-    commands.append(0*SCHAIN+0*PHI_B)
+    commands.append(0*SCHAIN+1*PHI+1*CLK_GATE+scan_id_reg*SCAN_ID)
+    commands.append(0*SCHAIN+0*PHI+1*CLK_GATE+scan_id_reg*SCAN_ID)
+    commands.append(0*SCHAIN+1*PHI_B+1*CLK_GATE+scan_id_reg*SCAN_ID)
+    commands.append(0*SCHAIN+0*PHI_B+1*CLK_GATE+scan_id_reg*SCAN_ID)
 
     ftdi.write(commands)
 
@@ -111,9 +111,9 @@ def command_read_scanbit(ftdi,peek=True, vv=0): #scan out from chip
 def command_load_chip(vv=0):
     if vv: print("- command compile, load_chip")
     commands = []
-    commands.append(0*SCHIP)
-    commands.append(1*SCHIP)
-    commands.append(0*SCHIP)
+    commands.append(0*SCHIP+1*CLK_GATE+scan_id_reg*SCAN_ID)
+    commands.append(1*SCHIP+1*CLK_GATE+scan_id_reg*SCAN_ID)
+    commands.append(0*SCHIP+1*CLK_GATE+scan_id_reg*SCAN_ID)
 
     return commands
 
@@ -121,28 +121,29 @@ def command_scan_id(scan_id_reg, vv=0):
     if vv: print("- command compile, scan_id")
     # scan_id_reg = not(scan_id_reg)
     commands = []
-    commands.append(scan_id_reg*SCAN_ID)
+    commands.append(scan_id_reg*SCAN_ID+1*CLK_GATE)
     #print(scan_id_reg*SCAN_ID)
     return commands
 
 def command_clk_gate(vv=0):
     if vv: print("- command compile, clk_gate")
     commands = []
-    commands.append(0*CLK_GATE)
-    commands.append(1*CLK_GATE)
+    commands.append(0*CLK_GATE+scan_id_reg*SCAN_ID)
+    commands.append(1*CLK_GATE+scan_id_reg*SCAN_ID)
+
     return commands
 
 def command_load_chain(vv=0):#scan out from chip
     if vv: print("- command compile, load_chain")
     commands = []
-    commands.append(0*SCHAIN)
-    commands.append(1*SCHAIN)
-    commands.append(1*PHI+1*SCHAIN)
-    commands.append(0*PHI+1*SCHAIN)
-    commands.append(1*PHI_B+1*SCHAIN)
-    commands.append(0*PHI_B+1*SCHAIN)
+    commands.append(0*SCHAIN+1*CLK_GATE+scan_id_reg*SCAN_ID)
+    commands.append(1*SCHAIN+1*CLK_GATE+scan_id_reg*SCAN_ID)
+    commands.append(1*PHI+1*SCHAIN+1*CLK_GATE+scan_id_reg*SCAN_ID)
+    commands.append(0*PHI+1*SCHAIN+1*CLK_GATE+scan_id_reg*SCAN_ID)
+    commands.append(1*PHI_B+1*SCHAIN+1*CLK_GATE+scan_id_reg*SCAN_ID)
+    commands.append(0*PHI_B+1*SCHAIN+1*CLK_GATE+scan_id_reg*SCAN_ID)
     # extra cycle..
-    commands.append(0*SCHAIN)
+    commands.append(0*SCHAIN+1*CLK_GATE+scan_id_reg*SCAN_ID)
 
     return commands
 
@@ -170,6 +171,7 @@ def read_scan(ftdi, peek=True, verbose=1, vv=0):
     return return_str
 
 def write_scan(ftdi, datastr='', loopback=0, verbose=1, vv=0):
+    global scan_id_reg
     if vv: print("scan : writing SCANCHAIN :%s "%(datastr))
 
     i_datastr = datastr.zfill(word_length)
@@ -202,6 +204,8 @@ def write_scan(ftdi, datastr='', loopback=0, verbose=1, vv=0):
     # load chip
     if verbose: print('scan : loading chip')
     commands = command_load_chip(vv)
+    scan_id_reg = not(scan_id_reg)
+    print(str(scan_id_reg))
     commands+=command_scan_id(scan_id_reg,vv)
     print(len(commands))
     ftdi.write(commands)
@@ -254,12 +258,12 @@ else:
 # mydev._ftdi.purge_buffers()
 # time.sleep(1)
 
+
 # Ex2) do write 
-ftdi.write(command_clk_gate) # Added clock gate
+mydev.write(command_clk_gate()) # Added clock gate
 init_list=dataload.read_csv_data('scan_initial.csv')
 init_str=dataload.load_scan_data(init_list)
 while(1):
-    scan_id_reg = not(scan_id_reg)
     write_scan(mydev,init_str, 1, 1, 0)
 
 # Ex3) do read (read 3677 data, from 2909th bit chip output)

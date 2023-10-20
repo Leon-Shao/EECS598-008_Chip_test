@@ -335,8 +335,9 @@ def write_result_file(filepath, out_str):
 
 
 # EX 1) initial data gen (make your initial gen function like this reference)
-write_csv('scan_initial.csv','1','1','1','1','1','1')
-#write_ext_fe('scan_fe_ext_initial.csv','DAC/mfcc_input_256.txt') #example for reading external binary txt file -> dump to variable
+write_csv('scan_initial.csv','1','0','81925','8192500000000000000000000000000000000000000000000','819250000000000000000000000000000000000000000000000000','1')
+#to generate read address
+#write_csv('scan_read.csv','0','1','todo','0','0','0')
 
 # EX 2) Make initial csv file, list, string and modify selected data
 '''

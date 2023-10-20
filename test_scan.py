@@ -79,10 +79,14 @@ def command_write_scanbit(din, vv=0):
     commands = []
     i_din = int(din)
     commands.append(0*SCHAIN+0*SCHIP+i_din*SDI+1*CLK_GATE+scan_id_reg*SCAN_ID)
-    commands.append(0*SCHAIN+0*SCHIP+i_din*SDI+1*PHI+1*CLK_GATE+scan_id_reg*SCAN_ID)
-    commands.append(0*SCHAIN+0*SCHIP+i_din*SDI+0*PHI+1*CLK_GATE+scan_id_reg*SCAN_ID)
-    commands.append(0*SCHAIN+0*SCHIP+i_din*SDI+1*PHI_B+1*CLK_GATE+scan_id_reg*SCAN_ID)
-    commands.append(0*SCHAIN+0*SCHIP+i_din*SDI+0*PHI_B+1*CLK_GATE+scan_id_reg*SCAN_ID)
+    for i in range(15):
+        commands.append(0*SCHAIN+0*SCHIP+i_din*SDI+1*PHI+1*CLK_GATE+scan_id_reg*SCAN_ID)
+    for i in range(10):
+        commands.append(0*SCHAIN+0*SCHIP+i_din*SDI+0*PHI+1*CLK_GATE+scan_id_reg*SCAN_ID)
+    for i in range(15):
+        commands.append(0*SCHAIN+0*SCHIP+i_din*SDI+1*PHI_B+1*CLK_GATE+scan_id_reg*SCAN_ID)
+    for i in range(10):
+        commands.append(0*SCHAIN+0*SCHIP+i_din*SDI+0*PHI_B+1*CLK_GATE+scan_id_reg*SCAN_ID)
     
     return commands
 
@@ -99,10 +103,14 @@ def command_read_scanbit(ftdi,peek=True, vv=0): #scan out from chip
         dout = format(int(data),'#010b')[-6] # D5 is dout
 
     commands = []
-    commands.append(0*SCHAIN+1*PHI+1*CLK_GATE+scan_id_reg*SCAN_ID)
-    commands.append(0*SCHAIN+0*PHI+1*CLK_GATE+scan_id_reg*SCAN_ID)
-    commands.append(0*SCHAIN+1*PHI_B+1*CLK_GATE+scan_id_reg*SCAN_ID)
-    commands.append(0*SCHAIN+0*PHI_B+1*CLK_GATE+scan_id_reg*SCAN_ID)
+    for i in range(15):
+        commands.append(0*SCHAIN+1*PHI+1*CLK_GATE+scan_id_reg*SCAN_ID)
+    for i in range(10):
+        commands.append(0*SCHAIN+0*PHI+1*CLK_GATE+scan_id_reg*SCAN_ID)
+    for i in range(15):
+        commands.append(0*SCHAIN+1*PHI_B+1*CLK_GATE+scan_id_reg*SCAN_ID)
+    for i in range(10):
+        commands.append(0*SCHAIN+0*PHI_B+1*CLK_GATE+scan_id_reg*SCAN_ID)
 
     ftdi.write(commands)
 
@@ -112,7 +120,8 @@ def command_load_chip(vv=0):
     if vv: print("- command compile, load_chip")
     commands = []
     commands.append(0*SCHIP+1*CLK_GATE+scan_id_reg*SCAN_ID)
-    commands.append(1*SCHIP+1*CLK_GATE+scan_id_reg*SCAN_ID)
+    for i in range(10):
+        commands.append(1*SCHIP+1*CLK_GATE+scan_id_reg*SCAN_ID)
     commands.append(0*SCHIP+1*CLK_GATE+scan_id_reg*SCAN_ID)
 
     return commands
@@ -136,12 +145,18 @@ def command_clk_gate(vv=0):
 def command_load_chain(vv=0):#scan out from chip
     if vv: print("- command compile, load_chain")
     commands = []
-    commands.append(0*SCHAIN+1*CLK_GATE+scan_id_reg*SCAN_ID)
-    commands.append(1*SCHAIN+1*CLK_GATE+scan_id_reg*SCAN_ID)
-    commands.append(1*PHI+1*SCHAIN+1*CLK_GATE+scan_id_reg*SCAN_ID)
-    commands.append(0*PHI+1*SCHAIN+1*CLK_GATE+scan_id_reg*SCAN_ID)
-    commands.append(1*PHI_B+1*SCHAIN+1*CLK_GATE+scan_id_reg*SCAN_ID)
-    commands.append(0*PHI_B+1*SCHAIN+1*CLK_GATE+scan_id_reg*SCAN_ID)
+    for i in range(10):
+        commands.append(0*SCHAIN+1*CLK_GATE+scan_id_reg*SCAN_ID)
+    for i in range(10):
+        commands.append(1*SCHAIN+1*CLK_GATE+scan_id_reg*SCAN_ID)
+    for i in range(15):
+        commands.append(1*PHI+1*SCHAIN+1*CLK_GATE+scan_id_reg*SCAN_ID)
+    for i in range(10):
+        commands.append(0*PHI+1*SCHAIN+1*CLK_GATE+scan_id_reg*SCAN_ID)
+    for i in range(15):
+        commands.append(1*PHI_B+1*SCHAIN+1*CLK_GATE+scan_id_reg*SCAN_ID)
+    for i in range(10):
+        commands.append(0*PHI_B+1*SCHAIN+1*CLK_GATE+scan_id_reg*SCAN_ID)
     # extra cycle..
     commands.append(0*SCHAIN+1*CLK_GATE+scan_id_reg*SCAN_ID)
 
@@ -154,7 +169,7 @@ def read_scan(ftdi, peek=True, verbose=1, vv=0):
     # load chain
     if verbose: print('scan : loading chain')
     commands = command_load_chain(vv)
-    commands += command_scan_id(scan_id_reg,vv) ###########
+    # commands += command_scan_id(scan_id_reg,vv) ###########
     ftdi.write(commands)
     # read chain
     return_str = ''
@@ -223,6 +238,48 @@ def write_scan(ftdi, datastr='', loopback=0, verbose=1, vv=0):
         if verbose: print("SUCCESS! sent message")
     return 
 
+def rotate(ftdi, datastr='', loopback=1, verbose=1, vv=0):
+    global scan_id_reg
+    if vv: print("scan : writing SCANCHAIN :%s "%(datastr))
+
+    i_datastr = datastr.zfill(word_length)
+    #print(i_datastr)
+    i_datalist = []
+    try:
+        for item in i_datastr:
+            i_datalist.append(int(item)) #might need bytes
+    except ValueError :
+        raise DevError('arg "datastr" needs to be a string of integer\n\n')
+        return
+    i_iter = int((word_length-1)/packet_length) + int((word_length-1)%packet_length > 0 )
+
+    # write chain
+    if verbose: print('scan : writing chip')
+    temp_datastr = ''
+    commands = []
+    for i in range(i_iter):
+        if i == i_iter-1: 	j_iter = word_length - i*packet_length
+        else:			j_iter = packet_length
+        for j in range(j_iter):
+            commands+=(command_write_scanbit(i_datalist[i*packet_length+j],vv))
+            temp_datastr += str(i_datalist[i*packet_length+j])
+        if verbose: print("scan : sending data =",temp_datastr)
+        temp_datastr = ''
+        ftdi.write(commands)
+
+    # loopback test
+    if loopback == 1:
+        #time.sleep(1)
+        if verbose: print("- doing loopback test")
+        i_loopbackstr = read_scan(ftdi, verbose,vv)
+        if i_datastr == i_loopbackstr: 
+            if verbose: print("SUCCESS! sent message correctly")
+        else: 
+            if verbose: print("FAILED!! loopback message different from sent")
+    else:
+        if verbose: print("SUCCESS! sent message")
+    return 
+
 class Error(Exception):
     pass
 
@@ -265,8 +322,13 @@ init_list=dataload.read_csv_data('scan_initial.csv')
 init_str=dataload.load_scan_data(init_list)
 while(1):
     write_scan(mydev,init_str, 1, 1, 0)
+    # rotate(mydev,init_str, 1, 1, 0)   for rotate chain
 
 # Ex3) do read (read 3677 data, from 2909th bit chip output)
+init_list=dataload.read_csv_data('scan_read.csv')
+init_str=dataload.load_scan_data(init_list)
+#write address you want to read from
+write_scan(mydev,init_str, 1, 1, 0)
 douts=read_scan(mydev,True, 0,0)
 if os.path.exists('scan_out.csv'):
    os.remove('scan_out.csv')

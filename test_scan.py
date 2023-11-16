@@ -185,6 +185,37 @@ def read_scan(ftdi, peek=True, verbose=1, vv=0):
     if verbose: print("scan : SUCCESS! read SCANCHAIN")
     return return_str
 
+def read_scan_rotate(ftdi, peek=True, verbose=1, vv=0):
+    if verbose: print("scan : reading SCANCHAIN")
+    i_iter = int((word_length-1)/packet_length) + int((word_length-1)%packet_length > 0 )
+
+    # read chain
+    return_str = ''
+    temp_datastr = ''
+    for i in range(i_iter):
+        if i == i_iter-1: 	j_iter = word_length - i*packet_length
+        else:			j_iter = packet_length
+
+        commands = []
+        for i in range(15):
+            commands.append(0*SCHAIN+1*PHI+1*CLK_GATE+scan_id_reg*SCAN_ID)
+        for i in range(10):
+            commands.append(0*SCHAIN+0*PHI+1*CLK_GATE+scan_id_reg*SCAN_ID)
+        for i in range(15):
+            commands.append(0*SCHAIN+1*PHI_B+1*CLK_GATE+scan_id_reg*SCAN_ID)
+        for i in range(10):
+            commands.append(0*SCHAIN+0*PHI_B+1*CLK_GATE+scan_id_reg*SCAN_ID)
+        ftdi.write(commands)
+    
+
+        for j in range(j_iter):
+            temp_datastr += command_read_scanbit(ftdi,peek, vv)
+        if verbose: print("scan : reading data =",temp_datastr)
+        return_str += temp_datastr
+        temp_datastr = ''
+    if verbose: print("scan : SUCCESS! read SCANCHAIN")
+    return return_str
+
 def write_scan(ftdi, datastr='', loopback=0, verbose=1, vv=0):
     global scan_id_reg
     if vv: print("scan : writing SCANCHAIN :%s "%(datastr))
@@ -263,7 +294,7 @@ def rotate(ftdi, datastr='', loopback=1, verbose=1, vv=0):
         for j in range(j_iter):
             commands+=(command_write_scanbit(i_datalist[i*packet_length+j],vv))
             temp_datastr += str(i_datalist[i*packet_length+j])
-        if verbose: print("scan : sending data =",temp_datastr)
+        #if verbose: print("scan : sending data =",temp_datastr)
         temp_datastr = ''
         ftdi.write(commands)
 
@@ -271,11 +302,13 @@ def rotate(ftdi, datastr='', loopback=1, verbose=1, vv=0):
     if loopback == 1:
         #time.sleep(1)
         if verbose: print("- doing loopback test")
-        i_loopbackstr = read_scan(ftdi, verbose,vv)
+        i_loopbackstr = read_scan_rotate(ftdi, verbose,vv)
+        #print("received data =", i_loopbackstr)
         if i_datastr == i_loopbackstr: 
             if verbose: print("SUCCESS! sent message correctly")
         else: 
             if verbose: print("FAILED!! loopback message different from sent")
+            print("error location",bin(int(i_datastr,2)^int(i_loopbackstr,2)))
     else:
         if verbose: print("SUCCESS! sent message")
     return 
@@ -317,12 +350,13 @@ else:
 
 
 # Ex2) do write 
-mydev.write(command_clk_gate()) # Added clock gate
+#mydev.write(command_clk_gate()) # Added clock gate
+
 init_list=dataload.read_csv_data('scan_initial.csv')
 init_str=dataload.load_scan_data(init_list)
 while(1):
-    write_scan(mydev,init_str, 1, 1, 0)
-    # rotate(mydev,init_str, 1, 1, 0)   for rotate chain
+    #write_scan(mydev,init_str, 1, 1, 0)
+    rotate(mydev,init_str, 1, 1, 0)  # for rotate chain
 
 # Ex3) do read (read 3677 data, from 2909th bit chip output)
 init_list=dataload.read_csv_data('scan_read.csv')

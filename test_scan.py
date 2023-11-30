@@ -197,14 +197,15 @@ def read_scan_rotate(ftdi, peek=True, verbose=1, vv=0):
         else:			j_iter = packet_length
 
         commands = []
-        for i in range(15):
-            commands.append(0*SCHAIN+1*PHI+1*CLK_GATE+scan_id_reg*SCAN_ID)
-        for i in range(10):
-            commands.append(0*SCHAIN+0*PHI+1*CLK_GATE+scan_id_reg*SCAN_ID)
-        for i in range(15):
-            commands.append(0*SCHAIN+1*PHI_B+1*CLK_GATE+scan_id_reg*SCAN_ID)
-        for i in range(10):
-            commands.append(0*SCHAIN+0*PHI_B+1*CLK_GATE+scan_id_reg*SCAN_ID)
+        #for i in range(15):
+        #    commands.append(0*SCHAIN+1*PHI+1*CLK_GATE+scan_id_reg*SCAN_ID)
+        #for i in range(10):
+        #    commands.append(0*SCHAIN+0*PHI+1*CLK_GATE+scan_id_reg*SCAN_ID)
+        #for i in range(15):
+        #    commands.append(0*SCHAIN+1*PHI_B+1*CLK_GATE+scan_id_reg*SCAN_ID)
+        #for i in range(10):
+        #    commands.append(0*SCHAIN+0*PHI_B+1*CLK_GATE+scan_id_reg*SCAN_ID)
+        
         ftdi.write(commands)
     
 
@@ -308,6 +309,8 @@ def rotate(ftdi, datastr='', loopback=1, verbose=1, vv=0):
             if verbose: print("SUCCESS! sent message correctly")
         else: 
             if verbose: print("FAILED!! loopback message different from sent")
+            print("idata is", i_datastr)
+            print("iloopback is", i_loopbackstr)
             print("error location",bin(int(i_datastr,2)^int(i_loopbackstr,2)))
     else:
         if verbose: print("SUCCESS! sent message")

@@ -234,8 +234,8 @@ def read_bin_file_to_val(filepath):
 
 ######scripts for generating csv########
 def write_csv(filepath, static_wen, static_ren, static_addr, static_wdata, static_rdata, static_ready):
-    if os.path.exists(filepath):
-        os.remove(filepath)
+    #if os.path.exists(filepath):
+    #    os.remove(filepath)
     with open(filepath, 'a', encoding='utf-8') as f:
         #####################
         # set FE DBG 
@@ -262,13 +262,20 @@ def read_csv_data(filename):
     datalist=[]
     val_num=0
     bit_num = 0
+    line_count = 0
     with open(filename,'r') as f:
+        datas = []
         lines=f.readlines()
         for line in lines:
+            line_count += 1
             tline = line.strip().split(', ')[1:3]
-            datalist.append(dec2bin(int(tline[0]),int(tline[1]))[::-1])
+            datas.append(dec2bin(int(tline[0]),int(tline[1]))[::-1])
             val_num +=1
             bit_num +=int(tline[1])
+            if line_count == 6:
+                datalist.append(datas)
+                datas = []
+                line_count = 0
 
     print(f"total value = {val_num}")
     print(f"total bitlength = {bit_num}")
@@ -335,7 +342,37 @@ def write_result_file(filepath, out_str):
 
 
 # EX 1) initial data gen (make your initial gen function like this reference)
-write_csv('scan_initial.csv','1','0','81925','8192500000000000000000000000000000000000000000000','819250000000000000000000000000000000000000000000000000','1')
+#write_csv('scan_initial.csv','1','0','81925','8192500000000000000000000000000000000000000000000','819250000000000000000000000000000000000000000000000000','1')
+
+#write_csv('scan_initial1.csv','1','0','0','48384384238081','0','0')
+#write_csv('scan_initial1.csv','1','0','0','68988965121','0','0')
+#write_csv('scan_initial1.csv','1','0','0','1','0','0')
+#write_csv('scan_initial1.csv','1','0','0','0','0','0')
+#write_csv('scan_initial1.csv','1','0','0','281505158922241','0','0')
+#write_csv('scan_initial1.csv','1','0','0','9187201950435737471','0','0')
+
+#for i in range(11):
+#    write_csv('scan_initial1.csv','1','0','1','9187201950435737471','0','0')
+
+#write_csv('scan_initial1.csv','1','0','2','9187201950435737471','0','0')
+
+#for i in range(162):
+#    write_csv('scan_initial1.csv','1','0','2','9187201950435737471','0','0')
+
+#for i in range(1000):
+#    write_csv('scan_initial1.csv','1','0','3','0','0','0')
+
+#write_csv('scan_initial2.csv','0','1','7','0','0','0')
+#write_csv('scan_initial2.csv','0','1','7','0','0','0')
+#write_csv('scan_initial2.csv','0','1','7','0','0','0')
+#write_csv('scan_initial2.csv','0','1','7','0','0','0')
+
+
+#write_csv('scan_initial3.csv','0','1','3','11','0','0')
+#write_csv('scan_initial3.csv','0','1','7','11','0','0')
+#write_csv('scan_initial3.csv','0','1','15','11','0','0')
+
+#write_csv('scan_initial3.csv','0','1','22447','11','0','0')
 #to generate read address
 #write_csv('scan_read.csv','0','1','todo','0','0','0')
 

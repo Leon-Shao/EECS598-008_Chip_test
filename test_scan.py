@@ -304,7 +304,7 @@ def rotate(ftdi, datastr='', loopback=1, verbose=1, vv=0):
         #time.sleep(1)
         if verbose: print("- doing loopback test")
         i_loopbackstr = read_scan_rotate(ftdi, verbose,vv)
-        #print("received data =", i_loopbackstr)
+        print("received data =", i_loopbackstr)
         if i_datastr == i_loopbackstr: 
             if verbose: print("SUCCESS! sent message correctly")
         else: 
@@ -339,15 +339,6 @@ mydev._ftdi.set_latency_timer(1)
 
 # Ex1) do reset test
 #how to detect async switch toggled?
-'''
-write_scan(mydev,'1', 0, 1, 0)
-reset_str=read_scan(mydev, 0, 0)
-# should be all zero except scan reset
-if reset_str==dataload.dec2bin(1,word_length):
-    print("RESET TEST PASSED")
-else:
-    print("RESET TEST FAILED")
-'''
 # mydev._ftdi.purge_buffers()
 # time.sleep(1)
 
@@ -355,67 +346,47 @@ else:
 # Ex2) do write 
 #mydev.write(command_clk_gate()) # Added clock gate
 
-init_list=dataload.read_csv_data('scan_initial.csv')
-init_str=dataload.load_scan_data(init_list)
-while(1):
-    #write_scan(mydev,init_str, 1, 1, 0)
-    rotate(mydev,init_str, 1, 1, 0)  # for rotate chain
+init_list=dataload.read_csv_data('scan_initial1.csv')
+for i in range(380):
+    init_str=dataload.load_scan_data(init_list[i])
+    write_scan(mydev,init_str, 1, 1, 0)
+    #rotate(mydev,init_str, 1, 1, 0)  # for rotate chain
 
+#    init_str=dataload.load_scan_data(init_list[i])
+#    write_scan(mydev,init_str, 1, 1, 0)
+
+
+print("scan in finishhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhh")
+
+init_list1=dataload.read_csv_data('scan_initial2.csv')
+for i in range(4):
+   init_str=dataload.load_scan_data(init_list1[i])
+   write_scan(mydev,init_str, 0, 0, 0)
+   douts=read_scan(mydev,True, 0,0)
+   print("dout is", douts)
+   dataload.write_result_file('scan_fe_out.csv', douts)
+for i in range(1000):
+    print("scan in finishhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhh")
+init_list2=dataload.read_csv_data('scan_initial3.csv')
+for i in range(4):
+   init_str=dataload.load_scan_data(init_list2[i])
+   write_scan(mydev,init_str, 0, 0, 0)
+   douts=read_scan(mydev,True, 0,0)
+   print("dout is", douts)
+   dataload.write_result_file('scan_fe_out1.csv', douts)
+
+print("scan in finishhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhh")
 # Ex3) do read (read 3677 data, from 2909th bit chip output)
-init_list=dataload.read_csv_data('scan_read.csv')
-init_str=dataload.load_scan_data(init_list)
+#init_list=dataload.read_csv_data('scan_read.csv')
+#init_str=dataload.load_scan_data(init_list)
 #write address you want to read from
-write_scan(mydev,init_str, 1, 1, 0)
-douts=read_scan(mydev,True, 0,0)
-if os.path.exists('scan_out.csv'):
-   os.remove('scan_out.csv')
-dataload.write_result_file('scan_out.csv', douts)
+#write_scan(mydev,init_str, 1, 1, 0)
+#douts=read_scan(mydev,True, 0,0)
+#if os.path.exists('scan_out.csv'):
+#   os.remove('scan_out.csv')
+#dataload.write_result_file('scan_out.csv', douts)
 
 # Ex4) do mfcc scan test
-'''
-# load initial string
-init_list=dataload.read_csv_data('scan_fe_ext_initial.csv')
-init_str =dataload.load_scan_data(init_list)
-
-# change data string...
-unchange_str = init_str[3:]
-clkh_rsl='100' + unchange_str
-clkl_rsl='000' + unchange_str
-clkh_rsh='110' + unchange_str
-clkl_rsh='010' + unchange_str
-clkh_rsh_rdy='111' + unchange_str
-clkl_rsh_rdy='011' + unchange_str
-clkh_rsl_rdy='101' + unchange_str
-clkl_rsl_rdy='001' + unchange_str
-
-# start mfcc write
-write_scan(mydev, clkh_rsl, 0, 0, 0)
-write_scan(mydev, clkl_rsl, 0, 0, 0)
-write_scan(mydev, clkh_rsl, 0, 0, 0)
-write_scan(mydev, clkl_rsh, 0, 0, 0)
-write_scan(mydev, clkh_rsh, 0, 0, 0)
-for i in range(1160):
-    write_scan(mydev, clkl_rsh_rdy, 0, 0, 0)
-    write_scan(mydev, clkh_rsh_rdy, 0, 0, 0)
-write_scan(mydev, clkl_rsl_rdy, 0, 0, 0)
-write_scan(mydev, clkh_rsl_rdy, 0, 0, 0)
-write_scan(mydev, clkl_rsl, 0, 0, 0)
-write_scan(mydev, clkh_rsl, 0, 0, 0)
-
-# start mfcc read and dump to csv file
-if os.path.exists('scan_fe_out.csv'):
-    os.remove('scan_fe_out.csv')
-for i in range(32):
-    write_scan(mydev, dataload.change_data_string(clkl_rsl,[[2055,i,7],[2062,i,5],[2067,i,5]]),0,0,0)
-    write_scan(mydev, dataload.change_data_string(clkh_rsl,[[2055,i,7],[2062,i,5],[2067,i,5]]),0,0,0)
-    douts=read_scan(mydev,True,0,0)
-    dataload.write_result_file_fe('scan_fe_out.csv', douts)
-for i in range(32,128):
-    write_scan(mydev, dataload.change_data_string(clkl_rsl,[[2055,i,7]]),0,0,0)
-    write_scan(mydev, dataload.change_data_string(clkh_rsl,[[2055,i,7]]),0,0,0)
-    douts=read_scan(mydev,True, 0,0)
-    dataload.write_result_file_fe('scan_fe_out.csv', douts)
-'''
 
 mydev._ftdi.reset()
 mydev.close()
